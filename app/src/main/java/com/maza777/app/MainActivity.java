@@ -1,9 +1,12 @@
 package com.maza777.app;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -16,6 +19,26 @@ import androidx.webkit.WebViewClientCompat;
 public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
+
+    public static class AndroidBridge {
+        private final Context context;
+
+        public AndroidBridge(Context context) {
+            this.context = context;
+        }
+
+        @JavascriptInterface
+        public void openExternalUrl(String url) {
+            try {
+                if (url == null || url.trim().isEmpty()) return;
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -42,9 +65,49 @@ public class MainActivity extends AppCompatActivity {
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
         settings.setMediaPlaybackRequiresUserGesture(false);
+        settings.setJavaScriptCanOpenWindowsAutomatically(true);
+        settings.setSupportMultipleWindows(true);
+
+        // Native Android Bridge for opening external Adsterra Smartlink Ads in Chrome
+        webView.addJavascriptInterface(new AndroidBridge(this), "AndroidBridge");
 
         webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new WebViewClientCompat() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                Uri uri = request.getUrl();
+                String host = uri.getHost();
+                if (host != null && !host.equals("appassets.androidplatform.net")) {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        return true;
+                    } catch (Exception ignored) {
+                        return false;
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            @SuppressWarnings("deprecation")
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                Uri uri = Uri.parse(url);
+                String host = uri.getHost();
+                if (host != null && !host.equals("appassets.androidplatform.net")) {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        return true;
+                    } catch (Exception ignored) {
+                        return false;
+                    }
+                }
+                return false;
+            }
+
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 return assetLoader.shouldInterceptRequest(request.getUrl());

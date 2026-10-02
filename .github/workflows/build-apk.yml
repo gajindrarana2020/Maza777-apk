@@ -69,6 +69,21 @@ jobs:
           echo "84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_HOME/licenses/android-sdk-preview-license" || true
           echo "Temporary debug keystore verified."
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build Web Application into Android Assets
+        run: |
+          npm ci || npm install
+          npm run build
+          mkdir -p app/src/main/assets
+          rm -rf app/src/main/assets/*
+          cp -r dist/* app/src/main/assets/
+          echo "Verified Android assets bundle:"
+          ls -la app/src/main/assets
+
       - name: Build debug APK
         run: gradle :app:assembleDebug --stacktrace --no-daemon
 

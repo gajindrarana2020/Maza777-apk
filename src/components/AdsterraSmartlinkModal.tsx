@@ -313,28 +313,31 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
               </div>
 
               <div className="space-y-2">
-                <div className="inline-block bg-red-500/20 text-red-400 border border-red-500/40 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">
-                  ❌ Bet Invalid!
+                <div className="inline-block bg-red-500/20 text-red-400 border border-red-500/40 text-xs font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
+                  ⚠️ 20s Se Pehle Return Aa Gaye!
                 </div>
-                <h4 className="text-lg font-black text-white">20 Second Pura Nahi Hua!</h4>
-                <div className="bg-red-950/40 border border-red-500/30 rounded-2xl p-3 text-xs text-zinc-200 text-left space-y-1.5">
-                  <p>
-                    • Aap sirf <strong>{elapsedSeconds} second</strong> baad wapas aa gaye.
+                <h4 className="text-xl font-black text-white">20 Second Pura Nahi Hua!</h4>
+                <div className="bg-red-950/40 border border-red-500/40 rounded-2xl p-3.5 text-xs text-zinc-200 text-left space-y-2">
+                  <p className="flex items-center gap-1.5 font-bold text-amber-300">
+                    <span>⏱️ Watch Time:</span> 
+                    <span className="font-mono bg-zinc-900 px-2 py-0.5 rounded text-white border border-zinc-700">
+                      {elapsedSeconds}s / 20s
+                    </span>
                   </p>
-                  <p>
-                    • Free Bet confirm karne ke liye Adsterra link ko <strong>kam se kam 20 second</strong> tak open rakhna zaroori hai.
+                  <p className="text-zinc-300">
+                    Aap sirf <strong>{elapsedSeconds} second</strong> baad wapas aa gaye. Free Bet confirm karne ke liye ad ko <strong>poora 20 second</strong> tak open rakhna anivarya hai!
                   </p>
                 </div>
               </div>
 
-              {/* Prominent Reopen Ad Button as requested */}
+              {/* Prominent Re-open Ad Button */}
               <button
                 type="button"
                 onClick={handleReopenAd}
-                className="w-full py-3.5 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-zinc-950 font-black text-sm rounded-2xl shadow-xl shadow-amber-500/30 cursor-pointer transition-all active:scale-95 flex items-center justify-center gap-2"
+                className="w-full py-4 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-zinc-950 font-black text-sm rounded-2xl shadow-xl shadow-amber-500/40 cursor-pointer transition-all active:scale-95 flex items-center justify-center gap-2 border border-yellow-300 animate-pulse"
               >
-                <RotateCcw className="w-4 h-4 stroke-[3]" />
-                <span>Reopen Ad (Dubara 20s Open Karein)</span>
+                <RotateCcw className="w-5 h-5 stroke-[3]" />
+                <span className="text-base tracking-wide">Re-Open Ad & Watch Full 20s</span>
               </button>
             </div>
           )}

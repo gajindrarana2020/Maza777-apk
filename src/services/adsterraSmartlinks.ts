@@ -97,10 +97,16 @@ export function getNextAdsterraSmartlink(): AdsterraSmartlink {
 }
 
 /**
- * Opens the Adsterra / ProfitableRate smartlink in a new window/tab safely
+ * Opens the Adsterra / ProfitableRate smartlink safely:
+ * In Android APK, calls native AndroidBridge to open external Chrome browser.
+ * In Web browser, opens via window.open.
  */
 export function openAdsterraSmartlink(url: string): Window | null {
   try {
+    if (typeof window !== 'undefined' && (window as any).AndroidBridge?.openExternalUrl) {
+      (window as any).AndroidBridge.openExternalUrl(url);
+      return null;
+    }
     return window.open(url, '_blank', 'noopener,noreferrer');
   } catch (err) {
     console.warn('[Adsterra] Could not open ad in window.open:', err);
