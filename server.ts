@@ -251,7 +251,32 @@ let serverGames: ServerGameState[] = [
 ];
 
 let globalDrawHistory: any[] = [];
+
+const DATA_DIR = path.join(process.cwd(), 'data');
+const BETS_DB_FILE = path.join(DATA_DIR, 'bets_db.json');
+
+if (!fs.existsSync(DATA_DIR)) {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  } catch {}
+}
+
 let multiUserBets: any[] = [];
+try {
+  if (fs.existsSync(BETS_DB_FILE)) {
+    multiUserBets = JSON.parse(fs.readFileSync(BETS_DB_FILE, 'utf-8'));
+  }
+} catch {
+  multiUserBets = [];
+}
+
+function persistBetsDisk() {
+  try {
+    fs.writeFileSync(BETS_DB_FILE, JSON.stringify(multiUserBets, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Failed to write bets_db.json:', err);
+  }
+}
 
 // Helper: Calculate Real-time dynamic game status and countdown based on server real-time clock
 function computeServerGameDynamicState(game: ServerGameState, now: Date) {
@@ -336,15 +361,59 @@ app.post('/api/bets', (req, res) => {
     ...bet,
     id: bet.id || 'bet_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
     serverTimestamp: Date.now(),
-    status: 'pending',
+    status: bet.status || 'pending',
   };
 
-  multiUserBets.unshift(storedBet);
-  if (multiUserBets.length > 500) {
-    multiUserBets = multiUserBets.slice(0, 500);
+  const existingIdx = multiUserBets.findIndex((b) => b.id === storedBet.id);
+  if (existingIdx !== -1) {
+    multiUserBets[existingIdx] = storedBet;
+  } else {
+    multiUserBets.unshift(storedBet);
   }
 
+  // Filter to last 48 hours
+  const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+  const now = Date.now();
+  multiUserBets = multiUserBets.filter((b) => (now - (b.timestamp || b.serverTimestamp || 0)) <= FORTY_EIGHT_HOURS);
+  persistBetsDisk();
+
   res.json({ success: true, bet: storedBet });
+});
+
+// API 3b: Bulk Sync Bets (48H statement window persistence)
+app.post('/api/bets/sync', (req, res) => {
+  const { bets } = req.body;
+  if (Array.isArray(bets)) {
+    const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+    const now = Date.now();
+    for (const b of bets) {
+      if (b && b.id) {
+        const idx = multiUserBets.findIndex((item) => item.id === b.id);
+        if (idx !== -1) {
+          multiUserBets[idx] = b;
+        } else {
+          multiUserBets.unshift(b);
+        }
+      }
+    }
+    multiUserBets = multiUserBets.filter((b) => (now - (b.timestamp || b.serverTimestamp || 0)) <= FORTY_EIGHT_HOURS);
+    persistBetsDisk();
+  }
+  res.json({ success: true, count: multiUserBets.length });
+});
+
+// API 3c: Fetch User Bets
+app.get('/api/bets', (req, res) => {
+  const userId = req.query.userId as string;
+  const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+  const now = Date.now();
+  multiUserBets = multiUserBets.filter((b) => (now - (b.timestamp || b.serverTimestamp || 0)) <= FORTY_EIGHT_HOURS);
+  
+  if (userId) {
+    const userBets = multiUserBets.filter((b) => b.userId === userId);
+    return res.json({ bets: userBets });
+  }
+  res.json({ bets: multiUserBets });
 });
 
 // Helper: Compute winning number following strict Zero-Bet priority & Min-Bet fallback

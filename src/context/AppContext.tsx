@@ -15,6 +15,8 @@ import {
   FirebaseWithdrawalData
 } from '../services/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
+import { loadPersistedBets, persistBets } from '../services/dbStorage';
+import { BetSuccessData } from '../components/BetSuccessModal';
 
 export interface RegisteredUserAccount {
   id: string;
@@ -41,6 +43,8 @@ interface AppContextType {
   bankCards: BankCard[];
   withdrawals: WithdrawalRecord[];
   betModalGame: Game | null;
+  betSuccessData: BetSuccessData | null;
+  setBetSuccessData: (data: BetSuccessData | null) => void;
   showBankModal: boolean;
   toast: { message: string; type: 'success' | 'win' | 'info' | 'error'; id: number } | null;
   isMuted: boolean;
@@ -318,15 +322,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [bets, setBets] = useState<UserBet[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.BETS);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return [];
-      }
-    }
-    return [];
+    return loadPersistedBets();
   });
 
   const [inboxMessages, setInboxMessages] = useState<InboxMessage[]>(() => {
@@ -390,6 +386,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [betModalGame, setBetModalGame] = useState<Game | null>(null);
+  const [betSuccessData, setBetSuccessData] = useState<BetSuccessData | null>(null);
   const [showBankModal, setShowBankModal] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(sounds.getMuted());
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'win' | 'info' | 'error'; id: number } | null>(null);
@@ -446,8 +443,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [games]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.BETS, JSON.stringify(bets));
-  }, [bets]);
+    persistBets(bets, user?.id);
+  }, [bets, user?.id]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.INBOX, JSON.stringify(inboxMessages));
@@ -666,6 +663,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         }
 
+        persistBets(updatedBets, user?.id);
         return updatedBets;
       });
 
@@ -1096,7 +1094,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       firebaseSynced: true,
     };
 
-    setBets((prev) => [newBet, ...prev]);
+    setBets((prev) => {
+      const updated = [newBet, ...prev];
+      persistBets(updated, activeUser.id);
+      return updated;
+    });
 
     // Send instant inbox notification for successfully placed bet (auto-deletes in 24 hours)
     const betPlacedMsg: InboxMessage = {
@@ -1127,7 +1129,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Offline safe
     }
 
-    showToast(`✅ Bet placed for #${numbers.join(', ')} (Rewarded Ad Verified)`, 'success');
+    // Trigger golden celebration modal
+    setBetSuccessData({
+      gameName: targetGame.name,
+      period: targetGame.period,
+      numbers: [...numbers],
+      stake: totalCost,
+      potentialWin: totalCost * multiplier,
+      timestamp: Date.now(),
+    });
+
     closeBetModal();
     return true;
   };
@@ -1708,6 +1719,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         bankCards,
         withdrawals,
         betModalGame,
+        betSuccessData,
+        setBetSuccessData,
         showBankModal,
         toast,
         isMuted,

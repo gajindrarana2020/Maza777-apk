@@ -4,6 +4,7 @@ import { Header } from './components/Header';
 import { BottomNav } from './components/BottomNav';
 import { BetModal } from './components/BetModal';
 import { BankModal } from './components/BankModal';
+import { BetSuccessModal } from './components/BetSuccessModal';
 import { ToastBanner } from './components/ToastBanner';
 import { AuthScreen } from './screens/AuthScreen';
 import { HomeScreen } from './screens/HomeScreen';
@@ -17,7 +18,7 @@ import { BetRecordScreen } from './screens/BetRecordScreen';
 import { AdminScreen } from './screens/AdminScreen';
 
 const MainApp: React.FC = () => {
-  const { user, activeScreen } = useApp();
+  const { user, activeScreen, betSuccessData, setBetSuccessData, navigateTo } = useApp();
 
   if (!user && activeScreen !== 'admin') {
     return (
@@ -55,6 +56,22 @@ const MainApp: React.FC = () => {
       {/* Global Modals & Popups */}
       <BetModal />
       <BankModal />
+
+      {/* Bet Success Celebration Modal (Always mounted at app root level) */}
+      {betSuccessData && (
+        <BetSuccessModal
+          data={betSuccessData}
+          onClose={() => setBetSuccessData(null)}
+          onViewRecords={() => {
+            setBetSuccessData(null);
+            navigateTo('betRecord');
+          }}
+          onViewInbox={() => {
+            setBetSuccessData(null);
+            navigateTo('inbox');
+          }}
+        />
+      )}
     </div>
   );
 };

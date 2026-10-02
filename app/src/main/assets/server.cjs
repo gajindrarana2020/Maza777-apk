@@ -276,7 +276,29 @@ var serverGames = [
   }
 ];
 var globalDrawHistory = [];
+var DATA_DIR = import_path.default.join(process.cwd(), "data");
+var BETS_DB_FILE = import_path.default.join(DATA_DIR, "bets_db.json");
+if (!import_fs.default.existsSync(DATA_DIR)) {
+  try {
+    import_fs.default.mkdirSync(DATA_DIR, { recursive: true });
+  } catch {
+  }
+}
 var multiUserBets = [];
+try {
+  if (import_fs.default.existsSync(BETS_DB_FILE)) {
+    multiUserBets = JSON.parse(import_fs.default.readFileSync(BETS_DB_FILE, "utf-8"));
+  }
+} catch {
+  multiUserBets = [];
+}
+function persistBetsDisk() {
+  try {
+    import_fs.default.writeFileSync(BETS_DB_FILE, JSON.stringify(multiUserBets, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Failed to write bets_db.json:", err);
+  }
+}
 function computeServerGameDynamicState(game, now) {
   const currentHours = now.getHours();
   const currentMinutes = now.getMinutes();
@@ -346,13 +368,50 @@ app.post("/api/bets", (req, res) => {
     ...bet,
     id: bet.id || "bet_" + Date.now() + "_" + Math.floor(Math.random() * 1e4),
     serverTimestamp: Date.now(),
-    status: "pending"
+    status: bet.status || "pending"
   };
-  multiUserBets.unshift(storedBet);
-  if (multiUserBets.length > 500) {
-    multiUserBets = multiUserBets.slice(0, 500);
+  const existingIdx = multiUserBets.findIndex((b) => b.id === storedBet.id);
+  if (existingIdx !== -1) {
+    multiUserBets[existingIdx] = storedBet;
+  } else {
+    multiUserBets.unshift(storedBet);
   }
+  const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1e3;
+  const now = Date.now();
+  multiUserBets = multiUserBets.filter((b) => now - (b.timestamp || b.serverTimestamp || 0) <= FORTY_EIGHT_HOURS);
+  persistBetsDisk();
   res.json({ success: true, bet: storedBet });
+});
+app.post("/api/bets/sync", (req, res) => {
+  const { bets } = req.body;
+  if (Array.isArray(bets)) {
+    const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1e3;
+    const now = Date.now();
+    for (const b of bets) {
+      if (b && b.id) {
+        const idx = multiUserBets.findIndex((item) => item.id === b.id);
+        if (idx !== -1) {
+          multiUserBets[idx] = b;
+        } else {
+          multiUserBets.unshift(b);
+        }
+      }
+    }
+    multiUserBets = multiUserBets.filter((b) => now - (b.timestamp || b.serverTimestamp || 0) <= FORTY_EIGHT_HOURS);
+    persistBetsDisk();
+  }
+  res.json({ success: true, count: multiUserBets.length });
+});
+app.get("/api/bets", (req, res) => {
+  const userId = req.query.userId;
+  const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1e3;
+  const now = Date.now();
+  multiUserBets = multiUserBets.filter((b) => now - (b.timestamp || b.serverTimestamp || 0) <= FORTY_EIGHT_HOURS);
+  if (userId) {
+    const userBets = multiUserBets.filter((b) => b.userId === userId);
+    return res.json({ bets: userBets });
+  }
+  res.json({ bets: multiUserBets });
 });
 function computeServerWinningNumber(game, bets) {
   const digits = game.digits;

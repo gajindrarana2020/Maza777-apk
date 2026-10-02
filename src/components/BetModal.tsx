@@ -3,14 +3,12 @@ import { X, Sparkles, ShieldAlert, CheckCircle2, Flame, Dices, Clock, Tv, Film, 
 import { useApp } from '../context/AppContext';
 import { sounds } from '../utils/audio';
 import { AdsterraSmartlinkModal } from './AdsterraSmartlinkModal';
-import { BetSuccessModal, BetSuccessData } from './BetSuccessModal';
 
 export const BetModal: React.FC = () => {
-  const { betModalGame, closeBetModal, placeBets, user, showToast, navigateTo } = useApp();
+  const { betModalGame, closeBetModal, placeBets, user, showToast } = useApp();
   const [selectedNumber, setSelectedNumber] = useState<string>('');
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [showAdsterraModal, setShowAdsterraModal] = useState<boolean>(false);
-  const [betSuccessData, setBetSuccessData] = useState<BetSuccessData | null>(null);
 
   // 10:1 Ratio: 1 Adsterra Smartlink Ad = 1 Number Bet with ₹10 fixed stake
   const FIXED_STAKE = 10;
@@ -84,22 +82,12 @@ export const BetModal: React.FC = () => {
   };
 
   /**
-   * Processes the bet in Firebase/database ONLY after 20 seconds ad watch time is completed
+   * Processes the bet in database ONLY after 20 seconds ad watch time is completed
    */
   const handleAdCompleted = () => {
     setShowAdsterraModal(false);
-    // Record success data for celebration popup
-    const successDetails: BetSuccessData = {
-      gameName: betModalGame.name,
-      period: betModalGame.period,
-      numbers: [selectedNumber],
-      stake: FIXED_STAKE,
-      potentialWin: potentialWin,
-      timestamp: Date.now(),
-    };
     // Process the bet with 10:1 ratio (1 ad = 1 bet of ₹10)
     placeBets(betModalGame.id, [selectedNumber], FIXED_STAKE);
-    setBetSuccessData(successDetails);
   };
 
   const handleAdCancelled = () => {
@@ -318,25 +306,6 @@ export const BetModal: React.FC = () => {
         potentialWin={potentialWin}
         onBetConfirmed={handleAdCompleted}
         onCancel={handleAdCancelled}
-      />
-
-      {/* Pop-up: Your Bet Placed Successfully */}
-      <BetSuccessModal
-        data={betSuccessData}
-        onClose={() => {
-          setBetSuccessData(null);
-          closeBetModal();
-        }}
-        onViewRecords={() => {
-          setBetSuccessData(null);
-          closeBetModal();
-          navigateTo('betRecord');
-        }}
-        onViewInbox={() => {
-          setBetSuccessData(null);
-          closeBetModal();
-          navigateTo('inbox');
-        }}
       />
     </div>
   );

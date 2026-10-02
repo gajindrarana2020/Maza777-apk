@@ -26,8 +26,8 @@ export interface BetSuccessData {
 interface BetSuccessModalProps {
   data: BetSuccessData | null;
   onClose: () => void;
-  onViewRecords: () => void;
-  onViewInbox: () => void;
+  onViewRecords?: () => void;
+  onViewInbox?: () => void;
 }
 
 export const BetSuccessModal: React.FC<BetSuccessModalProps> = ({
@@ -170,7 +170,7 @@ export const BetSuccessModal: React.FC<BetSuccessModalProps> = ({
                 onClick={() => {
                   sounds.playClick();
                   onClose();
-                  onViewRecords();
+                  onViewRecords?.();
                 }}
                 className="py-3 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 border border-zinc-700 transition-colors cursor-pointer"
               >
@@ -183,7 +183,7 @@ export const BetSuccessModal: React.FC<BetSuccessModalProps> = ({
                 onClick={() => {
                   sounds.playClick();
                   onClose();
-                  onViewInbox();
+                  onViewInbox?.();
                 }}
                 className="py-3 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 border border-zinc-700 transition-colors cursor-pointer"
               >
