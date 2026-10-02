@@ -53,10 +53,12 @@ export interface InboxMessage {
   userId: string;
   gameName: string;
   period: string;
+  drawNumber?: string;
   number: string;
-  status: 'WIN' | 'LOSE' | 'SYSTEM';
+  status: 'WIN' | 'LOSE' | 'SYSTEM' | 'BET_SUCCESS';
   amount: number;
   timestamp: number;
+  expiresAt?: number;
   read: boolean;
   title: string;
   details?: string;

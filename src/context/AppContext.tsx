@@ -453,6 +453,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(STORAGE_KEYS.INBOX, JSON.stringify(inboxMessages));
   }, [inboxMessages]);
 
+  // 24-Hour Auto-Delete Mechanism for Inbox Messages
+  useEffect(() => {
+    const purgeExpiredMessages = () => {
+      const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
+      setInboxMessages((prev) => {
+        const valid = prev.filter((m) => {
+          const expiryTime = m.expiresAt || (m.timestamp + 24 * 60 * 60 * 1000);
+          return expiryTime > Date.now() && m.timestamp >= twentyFourHoursAgo;
+        });
+        return valid.length !== prev.length ? valid : prev;
+      });
+    };
+
+    purgeExpiredMessages();
+    const interval = setInterval(purgeExpiredMessages, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.CARDS, JSON.stringify(allBankCards));
   }, [allBankCards]);
@@ -611,33 +629,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             });
 
             const winMsg: InboxMessage = {
-              id: 'msg_' + Date.now(),
+              id: 'msg_win_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
               userId: user?.id || '',
               gameName: game.name,
               period: currentPeriod,
+              drawNumber: currentPeriod,
               number: newWinningNumber,
               status: 'WIN',
               amount: totalWonInThisDraw,
               timestamp: Date.now(),
+              expiresAt: Date.now() + 24 * 60 * 60 * 1000,
               read: false,
-              title: `🎉 BIG WIN: ₹${totalWonInThisDraw.toFixed(2)} in ${game.name}!`,
-              details: `Winning Result: ${newWinningNumber}. Your bet matched! ₹${totalWonInThisDraw.toFixed(2)} prize credited to your Winnings Wallet.`,
+              title: `🏆 CONGRATULATIONS! You Won ₹${totalWonInThisDraw.toFixed(2)} in ${game.name}!`,
+              details: `Lottery: ${game.name} | Draw No: #${currentPeriod} | Drawn Winning Result: ${newWinningNumber}. Your bet matched! Prize of ₹${totalWonInThisDraw.toFixed(2)} has been credited to your Winnings Wallet. (Auto-deletes in 24 hours)`,
             };
             setInboxMessages((msgs) => [winMsg, ...msgs]);
             showToast(`🏆 BIG WIN! ${game.name} Result: ${newWinningNumber}. You won ₹${totalWonInThisDraw.toFixed(2)}!`, 'win');
           } else {
             const loseMsg: InboxMessage = {
-              id: 'msg_' + Date.now(),
+              id: 'msg_lose_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
               userId: user?.id || '',
               gameName: game.name,
               period: currentPeriod,
+              drawNumber: currentPeriod,
               number: newWinningNumber,
               status: 'LOSE',
               amount: 0,
               timestamp: Date.now(),
+              expiresAt: Date.now() + 24 * 60 * 60 * 1000,
               read: false,
-              title: `Draw Result: ${game.name} (${currentPeriod})`,
-              details: `Winning Result: ${newWinningNumber}. Better luck on the next round!`,
+              title: `💔 Result: ${game.name} (Draw #${currentPeriod}) - Better Luck Next Time`,
+              details: `Lottery: ${game.name} | Draw No: #${currentPeriod} | Drawn Winning Result: ${newWinningNumber}. Your bet did not win this round. Keep playing and winning with Maza 777! (Auto-deletes in 24 hours)`,
             };
             setInboxMessages((msgs) => [loseMsg, ...msgs]);
             showToast(`${game.name} result is ${newWinningNumber}. Better luck next time!`, 'info');
@@ -1074,6 +1096,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setBets((prev) => [newBet, ...prev]);
+
+    // Send instant inbox notification for successfully placed bet (auto-deletes in 24 hours)
+    const betPlacedMsg: InboxMessage = {
+      id: 'msg_bet_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+      userId: user.id,
+      gameName: targetGame.name,
+      period: targetGame.period,
+      drawNumber: targetGame.period,
+      number: numbers.join(', '),
+      status: 'BET_SUCCESS',
+      amount: totalCost,
+      timestamp: Date.now(),
+      expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+      read: false,
+      title: `🎟️ Bet Placed: ${targetGame.name} (Draw #${targetGame.period})`,
+      details: `Lottery: ${targetGame.name} | Draw No: #${targetGame.period} | Selected Pick: #${numbers.join(', ')}. Stake: ₹${totalCost} (Free via Ad). Potential Win: ₹${totalCost * multiplier}. Best of luck! (Auto-deletes in 24 hours)`,
+    };
+    setInboxMessages((msgs) => [betPlacedMsg, ...msgs]);
 
     // Also sync to server-side multi-user database
     try {
