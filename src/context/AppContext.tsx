@@ -1047,11 +1047,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('Logged out successfully. You can log in anytime with your Gmail / Email ID.', 'info');
   };
 
-  // Place Bets (100% Free Ads-Supported)
+  // Place Bets (100% Free Ads-Supported - Works seamlessly for Guest ID and Registered Users)
   const placeBets = (gameId: string, numbers: string[], amountPerNumber: number): boolean => {
-    if (!user) {
-      showToast('🔒 Bina registration / login ke game play nahi kar sakte! Please Register or Login.', 'error');
-      return false;
+    let activeUser = user;
+    if (!activeUser) {
+      activeUser = createNewGuestAccount();
+      setUser(activeUser);
     }
 
     if (numbers.length === 0) {
@@ -1077,9 +1078,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const newBet: UserBet = {
       id: 'bet_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-      userId: user.id,
-      gameId: targetGame.id,
+      userId: activeUser.id,
       gameName: targetGame.name,
+      gameId: targetGame.id,
       digits: targetGame.digits,
       period: targetGame.period,
       numbers: [...numbers],
@@ -1100,7 +1101,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Send instant inbox notification for successfully placed bet (auto-deletes in 24 hours)
     const betPlacedMsg: InboxMessage = {
       id: 'msg_bet_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-      userId: user.id,
+      userId: activeUser.id,
       gameName: targetGame.name,
       period: targetGame.period,
       drawNumber: targetGame.period,

@@ -71,14 +71,9 @@ export const BetModal: React.FC = () => {
 
   /**
    * Integrated function that triggers Adsterra Smartlink Ad when user clicks 'Bet Now'
-   * 20s required watch time with invalidation if user returns early
+   * 20s required watch time with invalidation if user returns early (Works for Guest & Registered)
    */
   const triggerAdsterraRewardedBet = () => {
-    if (!user) {
-      showToast('🔒 Please Register or Login first to place your free bet!', 'error');
-      return;
-    }
-
     if (!selectedNumber || selectedNumber.length !== digits) {
       showToast(`Please enter a valid ${digits}-digit number (e.g. ${digits === 3 ? '777 or 042' : '7777 or 0421'}) to play.`, 'error');
       return;
