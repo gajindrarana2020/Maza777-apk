@@ -1,0 +1,28 @@
+{
+  "name": "Maza777 - Live 3D & 4D Lottery",
+  "short_name": "Maza777",
+  "description": "Live 3D & 4D Lottery with automatic draws, Unity rewarded ads, and instant winning payouts.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e0f13",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/maza777_logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Maza777 - Games & Lottery Platform",
+  "description": "An online lottery and 3D/4D number betting game platform featuring real-time draws, wallet management, quick betting, withdrawals, bet history, and result notifications.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

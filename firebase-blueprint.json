@@ -1,0 +1,145 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User account authentication and wallet balance stored in Firebase cloud.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique user ID"
+        },
+        "username": {
+          "type": "string",
+          "description": "Unique username"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email address"
+        },
+        "phone": {
+          "type": "string",
+          "description": "10-digit mobile number"
+        },
+        "password": {
+          "type": "string",
+          "description": "Hashed or secret account password"
+        },
+        "balance": {
+          "type": "number",
+          "description": "Live wallet balance in Rupees"
+        },
+        "totalWon": {
+          "type": "number",
+          "description": "Cumulative total won prize amount"
+        },
+        "totalWithdrawn": {
+          "type": "number",
+          "description": "Cumulative total approved withdrawn amount"
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Epoch timestamp of registration"
+        },
+        "updatedAt": {
+          "type": "number",
+          "description": "Epoch timestamp of last update"
+        }
+      },
+      "required": ["id", "username", "email", "phone", "balance", "createdAt"]
+    },
+    "Withdrawal": {
+      "title": "Withdrawal",
+      "description": "User payout withdrawal requests displayed in admin panel for approval and verification.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique withdrawal record ID"
+        },
+        "userId": {
+          "type": "string",
+          "description": "ID of requesting user"
+        },
+        "userName": {
+          "type": "string",
+          "description": "Name / Username of the user"
+        },
+        "userEmail": {
+          "type": "string",
+          "description": "Email address"
+        },
+        "userPhone": {
+          "type": "string",
+          "description": "Mobile number"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Withdrawal amount in Rupees"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["bank", "upi"],
+          "description": "Payout channel"
+        },
+        "accountNumber": {
+          "type": "string",
+          "description": "Bank Account Number or UPI ID"
+        },
+        "bankName": {
+          "type": "string",
+          "description": "Name of bank or UPI app"
+        },
+        "ifscCode": {
+          "type": "string",
+          "description": "Bank IFSC Code"
+        },
+        "realName": {
+          "type": "string",
+          "description": "Account holder full name"
+        },
+        "upiId": {
+          "type": "string",
+          "description": "VPA UPI identifier"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"],
+          "description": "Processing state"
+        },
+        "utrNumber": {
+          "type": "string",
+          "description": "Bank UTR transaction ref when marked success"
+        },
+        "adminNote": {
+          "type": "string",
+          "description": "Optional notes from admin"
+        },
+        "timestamp": {
+          "type": "number",
+          "description": "Epoch timestamp when request was made"
+        },
+        "updatedAt": {
+          "type": "number",
+          "description": "Epoch timestamp of last update"
+        }
+      },
+      "required": ["id", "userId", "userName", "amount", "type", "accountNumber", "realName", "status", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "Collection of user profiles containing username, password, email, phone, and wallet balance."
+    },
+    "/withdrawals/{withdrawalId}": {
+      "schema": {
+        "$ref": "#/entities/Withdrawal"
+      },
+      "description": "Collection of user payout withdrawal requests with bank account details, amount, and approval status."
+    }
+  }
+}
