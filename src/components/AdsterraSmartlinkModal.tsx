@@ -52,6 +52,8 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
   const startTimeRef = useRef<number | null>(null);
   const timerRef = useRef<any>(null);
   const hasConfirmedRef = useRef<boolean>(false);
+  const launchTimestampRef = useRef<number>(0);
+  const hasLeftAppRef = useRef<boolean>(false);
 
   const triggerBetCompletion = () => {
     if (hasConfirmedRef.current) return;
@@ -67,9 +69,12 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
     }, 400);
   };
 
-  // Evaluate elapsed time when user returns to app
-  const checkAndHandleReturn = () => {
-    if (!startTimeRef.current || hasConfirmedRef.current) return;
+  // Called when user returns or focuses back onto the app
+  const handleAppReturn = () => {
+    if (!startTimeRef.current || hasConfirmedRef.current || status === 'completed') return;
+
+    // Ignore immediate click jitter (< 600ms from launch)
+    if (Date.now() - launchTimestampRef.current < 600) return;
 
     const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
     setElapsedSeconds(elapsed);
@@ -79,8 +84,8 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
     if (elapsed >= ADSTERRA_CONFIG.MIN_REQUIRED_SECONDS) {
       // 20s completed! Confirm the bet immediately!
       triggerBetCompletion();
-    } else if (elapsed > 2) {
-      // Returned before 20s (ignore first 2s window switch jitter)
+    } else {
+      // User returned before 20 seconds! SHOW RE-OPEN AD REMINDER!
       if (timerRef.current) clearInterval(timerRef.current);
       setStatus('invalid');
       sounds.playLose?.();
@@ -90,6 +95,7 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
   // Start / Reset Ad Verification Flow
   const launchAdVerification = (smartlinkToUse?: AdsterraSmartlink) => {
     hasConfirmedRef.current = false;
+    hasLeftAppRef.current = false;
     const link = smartlinkToUse || getNextAdsterraSmartlink();
     setCurrentSmartlink(link);
     setStatus('active');
@@ -99,6 +105,7 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
     
     const now = Date.now();
     startTimeRef.current = now;
+    launchTimestampRef.current = now;
 
     // Open Adsterra Smartlink
     openAdsterraSmartlink(link.url);
@@ -117,7 +124,7 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
       const remaining = Math.max(0, ADSTERRA_CONFIG.MIN_REQUIRED_SECONDS - elapsed);
       setSecondsRemaining(remaining);
 
-      // If user stayed in app or 20s elapsed
+      // If user stayed or 20s finished naturally
       if (remaining <= 0) {
         triggerBetCompletion();
       }
@@ -138,21 +145,29 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        checkAndHandleReturn();
+        handleAppReturn();
+      } else {
+        hasLeftAppRef.current = true;
       }
     };
 
     const handleWindowFocus = () => {
-      checkAndHandleReturn();
+      handleAppReturn();
+    };
+
+    const handleWindowBlur = () => {
+      hasLeftAppRef.current = true;
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleWindowFocus);
+    window.addEventListener('blur', handleWindowBlur);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleWindowFocus);
+      window.removeEventListener('blur', handleWindowBlur);
     };
   }, [isOpen]);
 
@@ -165,7 +180,9 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
   };
 
   const handleManualOpenAd = () => {
-    openAdsterraSmartlink(currentSmartlink.url);
+    sounds.playClick();
+    const nextLink = getNextAdsterraSmartlink();
+    launchAdVerification(nextLink);
   };
 
   const percentProgress = Math.min(
@@ -309,7 +326,7 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
             </div>
           )}
 
-          {/* STATE 2: INVALID (Returned before 20s) */}
+          {/* STATE 2: INVALID (Returned before 20s - Re-open Ad Reminder Screen) */}
           {status === 'invalid' && (
             <div className="space-y-4 animate-shake">
               <div className="w-16 h-16 rounded-3xl bg-red-500/20 border-2 border-red-500/50 flex items-center justify-center mx-auto text-red-400 shadow-xl shadow-red-500/20 animate-pulse">
