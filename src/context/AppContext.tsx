@@ -593,7 +593,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         let totalWonInThisDraw = 0;
 
         const updatedBets = prevBets.map((bet) => {
-          if (bet.gameId === gameId && bet.period === currentPeriod && bet.status === 'pending') {
+          if (bet.gameId === gameId && bet.status === 'pending') {
             const hasMatched = bet.numbers.includes(newWinningNumber);
             const payout = hasMatched ? bet.amountPerNumber * bet.payoutMultiplier : 0;
             if (hasMatched) {
@@ -610,7 +610,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
 
         const activeBetsForPeriod = prevBets.filter(
-          (b) => b.gameId === gameId && b.period === currentPeriod && b.status === 'pending'
+          (b) => b.gameId === gameId && b.status === 'pending'
         );
 
         if (activeBetsForPeriod.length > 0) {

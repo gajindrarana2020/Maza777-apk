@@ -27,11 +27,16 @@ export const BetRecordScreen: React.FC = () => {
   const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
   const now = Date.now();
 
-  // Strictly filter bets to the active user's own bets from the last 48 hours
+  // Filter bets for this device / user from the last 48 hours
   const user48HourBets = bets.filter((b) => {
-    const isUser = user ? (b.userId === user.id || b.userId === user.username) : true;
     const isWithin48h = (now - (b.timestamp || 0)) <= FORTY_EIGHT_HOURS_MS;
-    return isUser && isWithin48h;
+    if (!isWithin48h) return false;
+    // If user has email registered, show matching account or device bets
+    if (user && user.email && user.email.includes('@')) {
+      return b.userId === user.id || b.userId === user.username || b.userId === user.email;
+    }
+    // Guest ID: show all bets placed on this device
+    return true;
   });
 
   const filteredBets = user48HourBets.filter((b) => {
@@ -267,18 +272,14 @@ export const BetRecordScreen: React.FC = () => {
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-amber-400/90 font-mono italic">
-                            ⏳ Waiting for draw
-                          </span>
-                          {/* Instant settle button for testing */}
                           <button
                             type="button"
                             onClick={() => handleSettleNow(bet.gameId)}
                             disabled={settlingGameId === bet.gameId}
-                            className="text-[10px] bg-amber-400 hover:bg-amber-300 text-zinc-950 font-black px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm cursor-pointer transition-all active:scale-95"
+                            className="text-xs bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:brightness-110 text-zinc-950 font-black px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer transition-all active:scale-95 border border-yellow-300"
                           >
-                            <Zap className="w-3 h-3 fill-current" />
-                            <span>{settlingGameId === bet.gameId ? 'Settling...' : 'Settle Now'}</span>
+                            <Zap className="w-3.5 h-3.5 fill-current text-zinc-950" />
+                            <span>{settlingGameId === bet.gameId ? '🎰 Settling Draw...' : '⚡ Settle Draw & See Result'}</span>
                           </button>
                         </div>
                       )}

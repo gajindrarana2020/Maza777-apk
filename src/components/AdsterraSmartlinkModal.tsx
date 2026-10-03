@@ -51,10 +51,45 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
 
   const startTimeRef = useRef<number | null>(null);
   const timerRef = useRef<any>(null);
-  const adWindowRef = useRef<Window | null>(null);
+  const hasConfirmedRef = useRef<boolean>(false);
+
+  const triggerBetCompletion = () => {
+    if (hasConfirmedRef.current) return;
+    hasConfirmedRef.current = true;
+
+    if (timerRef.current) clearInterval(timerRef.current);
+    setStatus('completed');
+    setIsProcessingBet(true);
+    sounds.playWin?.();
+
+    setTimeout(() => {
+      onBetConfirmed();
+    }, 400);
+  };
+
+  // Evaluate elapsed time when user returns to app
+  const checkAndHandleReturn = () => {
+    if (!startTimeRef.current || hasConfirmedRef.current) return;
+
+    const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+    setElapsedSeconds(elapsed);
+    const remaining = Math.max(0, ADSTERRA_CONFIG.MIN_REQUIRED_SECONDS - elapsed);
+    setSecondsRemaining(remaining);
+
+    if (elapsed >= ADSTERRA_CONFIG.MIN_REQUIRED_SECONDS) {
+      // 20s completed! Confirm the bet immediately!
+      triggerBetCompletion();
+    } else if (elapsed > 2) {
+      // Returned before 20s (ignore first 2s window switch jitter)
+      if (timerRef.current) clearInterval(timerRef.current);
+      setStatus('invalid');
+      sounds.playLose?.();
+    }
+  };
 
   // Start / Reset Ad Verification Flow
   const launchAdVerification = (smartlinkToUse?: AdsterraSmartlink) => {
+    hasConfirmedRef.current = false;
     const link = smartlinkToUse || getNextAdsterraSmartlink();
     setCurrentSmartlink(link);
     setStatus('active');
@@ -66,10 +101,27 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
     startTimeRef.current = now;
 
     // Open Adsterra Smartlink
-    const win = openAdsterraSmartlink(link.url);
-    adWindowRef.current = win;
+    openAdsterraSmartlink(link.url);
     setHasOpenedAd(true);
     sounds.playClick();
+
+    // Clear old timer if any
+    if (timerRef.current) clearInterval(timerRef.current);
+
+    // 20-second active countdown interval
+    timerRef.current = setInterval(() => {
+      if (!startTimeRef.current || hasConfirmedRef.current) return;
+
+      const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      setElapsedSeconds(elapsed);
+      const remaining = Math.max(0, ADSTERRA_CONFIG.MIN_REQUIRED_SECONDS - elapsed);
+      setSecondsRemaining(remaining);
+
+      // If user stayed in app or 20s elapsed
+      if (remaining <= 0) {
+        triggerBetCompletion();
+      }
+    }, 250);
   };
 
   useEffect(() => {
@@ -78,60 +130,20 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
       setStatus('active');
       setHasOpenedAd(false);
       startTimeRef.current = null;
+      hasConfirmedRef.current = false;
       return;
     }
 
     launchAdVerification();
 
-    // 20-second countdown interval
-    timerRef.current = setInterval(() => {
-      if (!startTimeRef.current) return;
-
-      const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-      setElapsedSeconds(elapsed);
-      const remaining = Math.max(0, ADSTERRA_CONFIG.MIN_REQUIRED_SECONDS - elapsed);
-      setSecondsRemaining(remaining);
-
-      // If user stayed or 20s finished naturally
-      if (remaining <= 0) {
-        clearInterval(timerRef.current);
-        setStatus('completed');
-        setIsProcessingBet(true);
-        sounds.playWin?.();
-
-        setTimeout(() => {
-          onBetConfirmed();
-        }, 1200);
-      }
-    }, 250);
-
-    // Event listener for tab switch / user returning to this tab
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && startTimeRef.current) {
-        const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-        setElapsedSeconds(elapsed);
-
-        // If returned BEFORE 20 seconds, bet is INVALID!
-        if (elapsed < ADSTERRA_CONFIG.MIN_REQUIRED_SECONDS) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          setStatus('invalid');
-          sounds.playLose?.();
-        }
+      if (document.visibilityState === 'visible') {
+        checkAndHandleReturn();
       }
     };
 
     const handleWindowFocus = () => {
-      if (startTimeRef.current && status === 'active') {
-        const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-        setElapsedSeconds(elapsed);
-
-        // If returned before 20 seconds, mark invalid
-        if (elapsed < ADSTERRA_CONFIG.MIN_REQUIRED_SECONDS) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          setStatus('invalid');
-          sounds.playLose?.();
-        }
-      }
+      checkAndHandleReturn();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -150,27 +162,6 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
     sounds.playClick();
     const nextLink = getNextAdsterraSmartlink();
     launchAdVerification(nextLink);
-
-    // Re-bind the timer
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      if (!startTimeRef.current) return;
-      const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
-      setElapsedSeconds(elapsed);
-      const remaining = Math.max(0, ADSTERRA_CONFIG.MIN_REQUIRED_SECONDS - elapsed);
-      setSecondsRemaining(remaining);
-
-      if (remaining <= 0) {
-        clearInterval(timerRef.current);
-        setStatus('completed');
-        setIsProcessingBet(true);
-        sounds.playWin?.();
-
-        setTimeout(() => {
-          onBetConfirmed();
-        }, 1200);
-      }
-    }, 250);
   };
 
   const handleManualOpenAd = () => {
@@ -267,48 +258,61 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
                     r="42"
                     className="stroke-amber-400 transition-all duration-300 ease-linear"
                     strokeWidth="8"
+                    fill="transparent"
                     strokeDasharray={264}
                     strokeDashoffset={264 - (264 * percentProgress) / 100}
                     strokeLinecap="round"
-                    fill="transparent"
                   />
                 </svg>
+
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl font-black font-mono text-amber-300 tracking-tighter">
-                    {secondsRemaining}s
+                  <span className="text-3xl font-black text-white font-mono tracking-tight">
+                    {secondsRemaining}
                   </span>
-                  <span className="text-[10px] uppercase font-bold text-zinc-400">Remaining</span>
+                  <span className="text-[10px] uppercase tracking-wider text-amber-300 font-bold">
+                    SECONDS
+                  </span>
                 </div>
               </div>
 
-              <div className="space-y-1.5">
+              {/* Status explanation */}
+              <div className="space-y-1">
                 <h4 className="text-base font-extrabold text-white flex items-center justify-center gap-1.5">
-                  <span>Adsterra Ad Open Hai...</span>
+                  <Clock className="w-4 h-4 text-amber-400 animate-spin" />
+                  <span>Watching Adsterra Ad...</span>
                 </h4>
-                <p className="text-xs text-zinc-300 max-w-xs mx-auto leading-relaxed">
-                  ⚠️ <strong>Rule:</strong> Ad ko pura <strong>20 second</strong> tak open rakhna zaroori hai. 
-                  Agar aap 20s se pehle wapas aayenge toh <strong>Bet Invalid</strong> ho jayega!
+                <p className="text-xs text-zinc-400 max-w-xs mx-auto">
+                  Ad open rahega. 20 second poore hote hi aapka free bet automatic confirm ho jayega!
                 </p>
               </div>
 
-              {/* Direct Open Link fallback if popup was blocked */}
-              <div className="pt-1">
+              {/* If user reached 0s, show direct confirm button */}
+              {secondsRemaining <= 0 ? (
+                <button
+                  type="button"
+                  onClick={triggerBetCompletion}
+                  className="w-full py-3.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 text-zinc-950 font-black text-sm rounded-2xl shadow-xl shadow-emerald-500/30 flex items-center justify-center gap-2 animate-bounce cursor-pointer"
+                >
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span>🎉 20s Verified! Confirm Bet Now</span>
+                </button>
+              ) : (
                 <button
                   type="button"
                   onClick={handleManualOpenAd}
-                  className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 underline font-medium cursor-pointer"
+                  className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 underline font-semibold cursor-pointer pt-1"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Agar ad open nahi hua toh yahan click karein</span>
+                  <span>Ad window open nahi hui? Click here</span>
                 </button>
-              </div>
+              )}
             </div>
           )}
 
           {/* STATE 2: INVALID (Returned before 20s) */}
           {status === 'invalid' && (
-            <div className="space-y-4 animate-scaleIn">
-              <div className="w-16 h-16 rounded-3xl bg-red-500/20 border-2 border-red-500/50 flex items-center justify-center mx-auto text-red-400 shadow-xl shadow-red-500/20">
+            <div className="space-y-4 animate-shake">
+              <div className="w-16 h-16 rounded-3xl bg-red-500/20 border-2 border-red-500/50 flex items-center justify-center mx-auto text-red-400 shadow-xl shadow-red-500/20 animate-pulse">
                 <AlertTriangle className="w-9 h-9" />
               </div>
 

@@ -57,27 +57,6 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <div id="homeScreen" className="max-w-4xl mx-auto px-3 sm:px-4 py-4 space-y-4">
-      {/* Unauthenticated Guest Alert Banner */}
-      {!user && (
-        <div className="bg-gradient-to-r from-amber-500/20 via-[#1e1912] to-amber-500/20 border border-amber-500/50 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg animate-fade-in">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400 shrink-0">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="font-extrabold text-white text-sm sm:text-base">Registration Required to Play</h3>
-              <p className="text-xs text-zinc-300">Bina registration ya login ke game play nahi kar sakte. Register karein aur free game khele!</p>
-            </div>
-          </div>
-          <button
-            onClick={() => navigateTo('auth')}
-            className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-zinc-950 font-black text-xs rounded-xl shadow-md cursor-pointer transition-all active:scale-95 whitespace-nowrap"
-          >
-            Login / Register Now
-          </button>
-        </div>
-      )}
-
       {/* Live Wins Marquee Banner */}
       <div className="bg-gradient-to-r from-amber-500/15 via-zinc-900 to-amber-500/15 border border-amber-500/30 rounded-xl px-3.5 py-2 flex items-center justify-between shadow-sm overflow-hidden">
         <div className="flex items-center gap-2 text-xs font-semibold text-amber-300 shrink-0">
