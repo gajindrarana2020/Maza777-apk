@@ -1065,11 +1065,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return false;
     }
 
-    if (targetGame.status === 'drawing' || targetGame.status === 'closed') {
-      showToast('Betting is closed for this draw period!', 'error');
-      return false;
-    }
-
     sounds.playChipBet();
 
     const multiplier = targetGame.digits === 4 ? 100 : 50;

@@ -64,9 +64,7 @@ export const AdsterraSmartlinkModal: React.FC<AdsterraSmartlinkModalProps> = ({
     setIsProcessingBet(true);
     sounds.playWin?.();
 
-    setTimeout(() => {
-      onBetConfirmed();
-    }, 400);
+    onBetConfirmed();
   };
 
   // Called when user returns or focuses back onto the app

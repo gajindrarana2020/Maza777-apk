@@ -3,25 +3,6 @@ import { Game } from '../types';
 export const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
 
 export const INITIAL_GAMES: Game[] = [
-  // 0. TURBO EXPRESS 3D: 60-Second Real-Time Rapid Live Draw (3D Draw, 50x)
-  {
-    id: 'turbo-express-60s',
-    name: 'Turbo Express 3D (60s)',
-    category: 'turbo',
-    digits: 3,
-    period: 'TE-' + Math.floor(Date.now() / 60000),
-    result: '777',
-    lastDrawTime: Date.now(),
-    durationMs: 60 * 1000,
-    iconColor: '#F59E0B',
-    imageUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=300&auto=format&fit=crop&q=80',
-    badge: '⚡ 60s Live Draw',
-    status: 'active',
-    payoutMultiplier: 50,
-    description: 'Instant 60-Second Real-time 3D Draw with 50x Payout. Draw happens every 60 seconds!',
-    scheduleLabel: '60s Rapid Draw',
-  },
-
   // 1. MORNING EXPRESS 3D: 09:00 AM - 01:00 PM (3D Draw, 50x)
   {
     id: 'morning-express-3d',
