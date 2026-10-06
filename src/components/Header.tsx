@@ -35,7 +35,7 @@ export const Header: React.FC = () => {
 
   return (
     <header id="maza-header" className="sticky top-0 z-40 bg-[#15161A]/95 backdrop-blur-md border-b border-amber-500/20 shadow-lg">
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between">
+      <div className="max-w-md mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between">
         {/* Brand Logo (Secret 10-Tap Gateway for Admin) */}
         <div 
           onClick={handleLogoClick}

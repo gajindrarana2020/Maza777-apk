@@ -52,7 +52,7 @@ export const InboxScreen: React.FC = () => {
   };
 
   return (
-    <div id="inboxScreen" className="max-w-3xl mx-auto px-3 sm:px-4 py-4 space-y-4">
+    <div id="inboxScreen" className="max-w-md w-full mx-auto px-3 py-3.5 space-y-3.5">
       {/* Top Bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">

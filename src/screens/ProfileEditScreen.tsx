@@ -26,7 +26,7 @@ export const ProfileEditScreen: React.FC = () => {
   };
 
   return (
-    <div id="profileEditScreen" className="max-w-xl mx-auto px-3 sm:px-4 py-4 space-y-4">
+    <div id="profileEditScreen" className="max-w-md w-full mx-auto px-3 py-3.5 space-y-3.5">
       {/* Header */}
       <div className="flex items-center gap-3">
         <button

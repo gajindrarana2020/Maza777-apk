@@ -30,7 +30,7 @@ const MainApp: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0e0f13] text-white flex flex-col font-sans selection:bg-amber-400 selection:text-zinc-950 pb-20">
+    <div className="min-h-screen bg-[#0e0f13] text-white flex flex-col font-sans selection:bg-amber-400 selection:text-zinc-950 pb-24">
       {/* Global Toast */}
       <ToastBanner />
 
@@ -38,7 +38,7 @@ const MainApp: React.FC = () => {
       <Header />
 
       {/* Screen Router */}
-      <main className="flex-1 w-full max-w-4xl mx-auto">
+      <main className={`flex-1 w-full mx-auto ${activeScreen === 'admin' ? 'max-w-xl' : 'max-w-md'}`}>
         {activeScreen === 'home' && <HomeScreen />}
         {activeScreen === 'inbox' && <InboxScreen />}
         {activeScreen === 'withdraw' && <WithdrawScreen />}

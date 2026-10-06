@@ -180,7 +180,7 @@ export const WithdrawScreen: React.FC = () => {
   };
 
   return (
-    <div id="withdrawScreen" className="max-w-2xl mx-auto px-3 sm:px-4 py-4 space-y-4">
+    <div id="withdrawScreen" className="max-w-md w-full mx-auto px-3 py-3.5 space-y-3.5">
       {/* Header Balance Banner */}
       <div className="bg-gradient-to-br from-amber-600/30 via-[#181920] to-[#121318] border border-amber-500/40 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden">
         <div className="flex items-center justify-between">

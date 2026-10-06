@@ -127,7 +127,7 @@ export const InviteScreen: React.FC = () => {
   const claimableEarnings = user?.referralEarnings || 0;
 
   return (
-    <div id="inviteScreen" className="max-w-xl mx-auto px-3 sm:px-4 py-4 space-y-4 pb-24">
+    <div id="inviteScreen" className="max-w-md w-full mx-auto px-3 py-3.5 space-y-3.5 pb-24">
       {/* 3D Segmented Pod Tabs (Matching user reference image 1, 2, 3) */}
       <div className="relative pt-1">
         {/* Pod canopy background */}

@@ -135,7 +135,7 @@ export const ProfileScreen: React.FC = () => {
   ];
 
   return (
-    <div id="profileScreen" className="max-w-2xl mx-auto px-3 sm:px-4 py-4 space-y-4">
+    <div id="profileScreen" className="max-w-md w-full mx-auto px-3 py-3.5 space-y-3.5">
       {/* Profile Card Header */}
       <div className="bg-gradient-to-br from-[#20222b] to-[#15161c] border border-amber-500/30 rounded-2xl p-5 shadow-xl relative overflow-hidden">
         <div className="flex items-center gap-4">

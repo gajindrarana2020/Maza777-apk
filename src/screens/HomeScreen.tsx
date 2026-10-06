@@ -56,7 +56,7 @@ export const HomeScreen: React.FC = () => {
   });
 
   return (
-    <div id="homeScreen" className="max-w-4xl mx-auto px-3 sm:px-4 py-4 space-y-4">
+    <div id="homeScreen" className="max-w-md w-full mx-auto px-3 py-3.5 space-y-3.5">
       {/* Live Wins Marquee Banner */}
       <div className="bg-gradient-to-r from-amber-500/15 via-zinc-900 to-amber-500/15 border border-amber-500/30 rounded-xl px-3.5 py-2 flex items-center justify-between shadow-sm overflow-hidden">
         <div className="flex items-center gap-2 text-xs font-semibold text-amber-300 shrink-0">

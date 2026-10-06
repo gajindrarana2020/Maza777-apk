@@ -70,7 +70,7 @@ export const WithdrawRecordScreen: React.FC = () => {
   const rejectedCount = withdrawals.filter((w) => w.status === 'rejected').length;
 
   return (
-    <div id="withdrawRecordScreen" className="max-w-3xl mx-auto px-3 sm:px-4 py-4 space-y-4">
+    <div id="withdrawRecordScreen" className="max-w-md w-full mx-auto px-3 py-3.5 space-y-3.5">
       {/* Header Bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
